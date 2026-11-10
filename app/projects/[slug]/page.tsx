@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Cmd } from "@/components/cmd";
 import { getProject, projects } from "@/lib/projects";
+
+export const instant = false;
 
 export function generateStaticParams() {
   return projects.map((project) => ({ slug: project.slug }));
@@ -24,12 +27,7 @@ export default async function ProjectPage({
 
   return (
     <section className="mx-auto w-full max-w-2xl px-4 py-10 sm:px-6 sm:py-16">
-      <p className="mb-3 text-sm">
-        <span className="text-accent">pooja@scu:~$</span>{" "}
-        <span className="text-foreground/60">
-          cat projects/{project.slug}.md
-        </span>
-      </p>
+      <Cmd>{`cat projects/${project.slug}.md`}</Cmd>
 
       <h1 className="text-xl sm:text-2xl">{project.title}</h1>
       <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1">
@@ -42,10 +40,7 @@ export default async function ProjectPage({
       </p>
 
       <div className="mt-8">
-        <p className="mb-3 text-sm">
-          <span className="text-accent">pooja@scu:~$</span>{" "}
-          <span className="text-foreground/60">cat highlights.txt</span>
-        </p>
+        <Cmd>cat highlights.txt</Cmd>
         <ul className="space-y-2.5">
           {project.highlights.map((highlight) => (
             <li
@@ -62,10 +57,7 @@ export default async function ProjectPage({
       </div>
 
       <div className="mt-8">
-        <p className="mb-3 text-sm">
-          <span className="text-accent">pooja@scu:~$</span>{" "}
-          <span className="text-foreground/60">ls stack/</span>
-        </p>
+        <Cmd>ls stack/</Cmd>
         <div className="flex flex-wrap gap-1.5">
           {project.stack.map((tech) => (
             <span

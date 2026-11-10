@@ -15,7 +15,7 @@ export function Nav() {
 
   return (
     <header className="border-b border-accent/20 bg-black/30">
-      <nav className="mx-auto flex max-w-2xl items-center gap-1 overflow-x-auto px-3 py-2.5 text-sm whitespace-nowrap sm:px-6">
+      <nav className="mx-auto flex max-w-3xl items-center gap-1 overflow-x-auto px-3 py-2.5 text-sm whitespace-nowrap sm:px-6">
         <span className="mr-2 hidden text-accent sm:inline" aria-hidden>
           visitor@site:~$
         </span>
