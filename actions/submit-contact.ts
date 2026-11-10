@@ -10,11 +10,15 @@ export async function submitContact(formData: FormData) {
   const email = String(formData.get("email") ?? "").trim();
   const message = String(formData.get("message") ?? "").trim();
 
+  const params = new URLSearchParams();
+  if (name) params.set("name", name);
+  if (email) params.set("email", email);
+
   if (!name || !email || !message) {
-    redirect("/contact-me-server-form?error=required");
+    redirect(`/contact-me-server-form?error=required&${params.toString()}`);
   }
   if (!EMAIL_RE.test(email)) {
-    redirect("/contact-me-server-form?error=email");
+    redirect(`/contact-me-server-form?error=email&${params.toString()}`);
   }
 
   await appendSubmission({ name, email, message });
