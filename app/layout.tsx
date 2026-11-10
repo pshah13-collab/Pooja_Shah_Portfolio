@@ -10,10 +10,10 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "[your name] ~ terminal portfolio",
-    template: "%s ~ [your name]",
+    default: "Pooja Shah ~ Terminal Portfolio",
+    template: "%s ~ Pooja Shah",
   },
-  description: "cs student who likes building web stuff",
+  description: "Aspiring data analyst — turning data into decisions",
 };
 
 export const viewport: Viewport = {

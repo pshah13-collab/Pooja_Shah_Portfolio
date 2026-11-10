@@ -1,13 +1,13 @@
 import { MiniTerminal } from "@/components/mini-terminal";
 
-const NAME = "[your name]";
-const TAGLINE = "cs student who likes building web stuff";
+const NAME = "Pooja Shah";
+const TAGLINE = "Aspiring data analyst — turning data into decisions";
 
 export default function Home() {
   return (
     <section className="mx-auto w-full max-w-2xl px-4 py-10 sm:px-6 sm:py-16">
       <h1 className="text-2xl sm:text-4xl">
-        <span className="typing-text">{`> hi, i'm ${NAME}`}</span>
+        <span className="typing-text">{`> Hi, I'm ${NAME}`}</span>
         <span className="caret" aria-hidden />
       </h1>
       <p className="mt-4 text-sm text-foreground/70 sm:text-base">

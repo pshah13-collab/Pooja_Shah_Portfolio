@@ -82,7 +82,7 @@ export function MiniTerminal() {
         <span className="h-2.5 w-2.5 rounded-full bg-yellow-400/70" />
         <span className="h-2.5 w-2.5 rounded-full bg-green-400/70" />
         <span className="ml-2 text-xs text-foreground/50">
-          guest@[your-name]: ~
+          guest@pooja: ~
         </span>
       </div>
       <div
