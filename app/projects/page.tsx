@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Cmd } from "@/components/cmd";
 import { projects } from "@/lib/projects";
 
 export const metadata: Metadata = {
@@ -9,10 +10,7 @@ export const metadata: Metadata = {
 export default function Projects() {
   return (
     <section className="mx-auto w-full max-w-2xl px-4 py-10 sm:px-6 sm:py-16">
-      <p className="mb-3 text-sm">
-        <span className="text-accent">pooja@scu:~$</span>{" "}
-        <span className="text-foreground/60">ls projects/</span>
-      </p>
+      <Cmd>ls projects/</Cmd>
       <p className="text-xl sm:text-2xl">Projects</p>
 
       <div className="mt-8 space-y-4">
