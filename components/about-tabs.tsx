@@ -15,7 +15,7 @@ const TABS = [
 type TabId = (typeof TABS)[number]["id"];
 
 const BIO_MAIN =
-  "MSBA candidate at Santa Clara University (Dec 2026) with 3+ years of analytics experience. I started in HR analytics — forecasting hiring, modeling attrition, cutting 90-day turnover from 22% to 15% — and now build broader data products: a supplier risk intelligence platform for Google's Supply Chain Risk team, LLM cost dashboards, and student stress-prediction models.";
+  "I'm an MSBA student at Santa Clara University (graduating Dec 2026). I have 3+ years of analytics experience, starting in HR analytics, where I forecasted hiring, modeled attrition, and helped cut 90-day turnover from 22% to 15%. At SCU, I've applied that same thinking to new problems: a supplier risk intelligence platform for Google's Supply Chain Risk team, LLM cost dashboards, and models that predict student stress.";
 
 const BIO_QUOTE = "I like the part where messy data becomes a decision.";
 
