@@ -31,7 +31,7 @@ npm run start
 | `/projects` | Project list styled like `ls projects/` |
 | `/projects/[slug]` | Dynamically routed project detail pages: `tokenly`, `bronco-health`, `analytics-showdown` |
 | `/blogs` | Public blog list — loaded in the browser from `GET /api/blogs`, each post links to its own page |
-| `/blogs/[id]` | Dynamically routed blog post detail page, rendered from `data/blogs.json` |
+| `/blogs/[id]` | Dynamically routed blog post detail page, rendered from `data/blogs.json` (also reachable at `/blog-posts/[id]`) |
 | `/contact-me` | Contact form (client component) that sends the message as JSON to `POST /api/contact` |
 | `/admin/blogs` | Blog management: create posts via `POST /api/blogs` and list existing ones via `GET /api/blogs` |
 | `/contact-me-server-form` | Server-rendered contact form that saves submissions to a JSON file |
@@ -53,10 +53,14 @@ my-portfolio/
 │   ├── blogs/
 │   │   ├── page.tsx               # /blogs — list loaded from GET /api/blogs
 │   │   └── [id]/page.tsx          # /blogs/[id] (dynamic blog post route)
+│   ├── blog-posts/
+│   │   ├── page.tsx               # /blog-posts — redirects to /blogs
+│   │   └── [id]/page.tsx          # /blog-posts/[id] — alias of /blogs/[id]
 │   ├── contact-me/page.tsx        # /contact-me (API-backed form)
 │   ├── admin/blogs/page.tsx       # /admin/blogs (blog management)
 │   ├── api/
 │   │   ├── contact/route.ts       # POST /api/contact — saves to data/submissions.json
+│   │   ├── contacts/route.ts      # POST /api/contacts — alias, same handler
 │   │   └── blogs/route.ts         # POST/GET /api/blogs — saves to/reads data/blogs.json
 │   └── contact-me-server-form/
 │       └── page.tsx               # /contact-me-server-form
