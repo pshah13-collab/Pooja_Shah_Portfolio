@@ -5,7 +5,7 @@ import { Cmd } from "@/components/cmd";
 import { VennDiagram } from "@/components/venn-diagram";
 
 const TABS = [
-  { id: "venn", label: "venn.svg", cmd: "python3 venn.py" },
+  { id: "venn", label: "whoami.svg", cmd: "python3 venn.py" },
   { id: "bio", label: "bio.txt", cmd: "cat bio.txt" },
   { id: "education", label: "education.txt", cmd: "cat education.txt" },
   { id: "experience", label: "experience.log", cmd: "tail -n 4 experience.log" },
