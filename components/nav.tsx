@@ -7,6 +7,9 @@ const links = [
   { href: "/", label: "cd ~" },
   { href: "/about-me", label: "cd /about-me" },
   { href: "/projects", label: "ls /projects" },
+  { href: "/blogs", label: "ls /blogs" },
+  { href: "/contact-me", label: "fetch /contact-me" },
+  { href: "/admin/blogs", label: "sudo /admin/blogs" },
   { href: "/contact-me-server-form", label: "curl /contact-me-server-form" },
 ];
 

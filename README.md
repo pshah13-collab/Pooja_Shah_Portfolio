@@ -30,6 +30,10 @@ npm run start
 | `/about-me` | Bio, education, experience, and skills rendered as terminal command output |
 | `/projects` | Project list styled like `ls projects/` |
 | `/projects/[slug]` | Dynamically routed project detail pages: `tokenly`, `bronco-health`, `analytics-showdown` |
+| `/blogs` | Public blog list — loaded in the browser from `GET /api/blogs`, each post links to its own page |
+| `/blogs/[id]` | Dynamically routed blog post detail page, rendered from `data/blogs.json` |
+| `/contact-me` | Contact form (client component) that sends the message as JSON to `POST /api/contact` |
+| `/admin/blogs` | Blog management: create posts via `POST /api/blogs` and list existing ones via `GET /api/blogs` |
 | `/contact-me-server-form` | Server-rendered contact form that saves submissions to a JSON file |
 
 The mini terminal on the landing page supports: `help`, `about`, `projects`, `contact`, `clear` — anything else returns `command not found`.
@@ -46,19 +50,32 @@ my-portfolio/
 │   ├── projects/
 │   │   ├── page.tsx               # /projects
 │   │   └── [slug]/page.tsx        # /projects/[slug] (dynamic route)
+│   ├── blogs/
+│   │   ├── page.tsx               # /blogs — list loaded from GET /api/blogs
+│   │   └── [id]/page.tsx          # /blogs/[id] (dynamic blog post route)
+│   ├── contact-me/page.tsx        # /contact-me (API-backed form)
+│   ├── admin/blogs/page.tsx       # /admin/blogs (blog management)
+│   ├── api/
+│   │   ├── contact/route.ts       # POST /api/contact — saves to data/submissions.json
+│   │   └── blogs/route.ts         # POST/GET /api/blogs — saves to/reads data/blogs.json
 │   └── contact-me-server-form/
 │       └── page.tsx               # /contact-me-server-form
 ├── actions/
 │   └── submit-contact.ts          # server action invoked by the contact form
 ├── lib/
 │   ├── projects.ts                # project data (single source for /projects routes)
-│   └── submissions.ts             # read/append helpers for data/submissions.json
+│   ├── submissions.ts             # read/append helpers for data/submissions.json
+│   └── blogs.ts                   # read/append helpers for data/blogs.json
 ├── components/
 │   ├── cmd.tsx                    # shared `pooja@scu:~$` prompt line
 │   ├── nav.tsx                    # shell-command nav with active-page highlight
-│   └── mini-terminal.tsx          # interactive terminal (client component)
+│   ├── mini-terminal.tsx          # interactive terminal (client component)
+│   ├── contact-api-form.tsx       # /contact-me form that fetch()es POST /api/contact
+│   ├── blog-manager.tsx          # /admin/blogs create form + list (client component)
+│   └── blog-list.tsx             # /blogs list that fetch()es GET /api/blogs (client component)
 └── data/
-    └── submissions.json           # contact form submissions land here
+    ├── submissions.json           # contact form submissions land here
+    └── blogs.json                 # blog posts land here
 ```
 
 ## How the contact form works, step by step
