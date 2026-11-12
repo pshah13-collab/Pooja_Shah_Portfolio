@@ -75,11 +75,22 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: message.error }, { status: 400 });
   }
 
-  const submission = await appendSubmission({
-    name: name.text,
-    email: email.text,
-    message: message.text,
-  });
+  let submission;
+  try {
+    submission = await appendSubmission({
+      name: name.text,
+      email: email.text,
+      message: message.text,
+    });
+  } catch {
+    return NextResponse.json(
+      {
+        error:
+          "error: storage is not writable on this deployment (serverless hosts have a read-only filesystem).",
+      },
+      { status: 500 },
+    );
+  }
 
   return NextResponse.json(submission, { status: 201 });
 }
