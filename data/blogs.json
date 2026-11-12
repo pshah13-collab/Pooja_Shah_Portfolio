@@ -1,0 +1,8 @@
+[
+  {
+    "id": "6c84c847-92ba-4014-8abf-df37c10c1b65",
+    "createdAt": "2026-11-12T18:33:05.265Z",
+    "title": "Why I built my portfolio to look like a terminal",
+    "body": "In one of my recent class projects, we built a CLI, a program you use entirely from the terminal. I expected it to feel old school, but I ended up really enjoying it. There's something satisfying about typing a command and getting exactly what you asked for.\n\nSo when it was time to build my portfolio, I didn't want to start from scratch with a design that had nothing to do with what I'd been learning. I like carrying forward what I learn into the next thing I build, and the terminal felt like the perfect fit. Why not make my portfolio look and feel like one?\n\nThat's how this site came together. The navigation is written like shell commands (cd /about-me, ls /projects), every page opens with a command like you're running it yourself, and the home page has a mini terminal where you can type commands like help or projects to move around. I built it with Next.js, TypeScript, and Tailwind CSS, working alongside an AI coding agent.\n\nThe biggest thing I learned is that a theme isn't just about looks. Making something feel like a terminal meant thinking about how people actually move around a site, and making sure it still works on a phone, where typing commands isn't always easy.\n\nI'm going to keep building on this, so try typing help on the home page and see what's there."
+  }
+]
