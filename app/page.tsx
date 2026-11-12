@@ -1,4 +1,5 @@
 import { MiniTerminal } from "@/components/mini-terminal";
+import { Cmd } from "@/components/cmd";
 
 const NAME = "Pooja Shah";
 const TAGLINE = "Aspiring data analyst — turning data into decisions";
@@ -13,6 +14,26 @@ export default function Home() {
       <p className="mt-4 text-sm text-foreground/70 sm:text-base">
         <span className="text-highlight">$</span> {TAGLINE}
       </p>
+
+      <div className="mt-8">
+        <Cmd>open cv.pdf</Cmd>
+        <a
+          href="/Pooja-Shah-Resume.pdf"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex flex-wrap items-baseline gap-x-2 rounded-lg border border-accent/20 bg-black/30 px-4 py-2.5 text-sm transition-colors hover:border-accent/50 hover:bg-accent/5"
+        >
+          <span className="text-accent" aria-hidden>
+            -rw-r--r--
+          </span>
+          <span className="font-medium text-foreground transition-colors hover:text-accent-bright">
+            Pooja-Shah-Resume.pdf
+          </span>
+          <span className="text-foreground/50">
+            — my CV, Data Analyst
+          </span>
+        </a>
+      </div>
 
       <div className="mt-10 sm:mt-14">
         <p className="mb-3 text-sm text-foreground/50">

@@ -8,15 +8,22 @@ type Line = { id: number; text: string; kind: "in" | "out" | "err" };
 const NAV_COMMANDS: Record<string, string> = {
   about: "/about-me",
   projects: "/projects",
-  contact: "/contact-me-server-form",
+  blogs: "/blogs",
+  contact: "/contact-me",
 };
+
+const EMAIL = "poojadshah1999@gmail.com";
 
 const HELP_LINES = [
   "Available commands:",
   "  help       show this list",
   "  about      go to /about-me",
   "  projects   go to /projects",
-  "  contact    go to /contact-me-server-form",
+  "  blogs      go to /blogs",
+  "  contact    go to /contact-me",
+  "  cv         open my resume",
+  "  email      copy my email address",
+  "  whoami     who are you?",
   "  clear      clear the terminal",
 ];
 
@@ -35,7 +42,7 @@ export function MiniTerminal() {
     if (el) el.scrollTop = el.scrollHeight;
   }, [lines]);
 
-  function run(raw: string) {
+  async function run(raw: string) {
     const input = raw.trim();
     if (!input) return;
 
@@ -53,6 +60,35 @@ export function MiniTerminal() {
       setLines([]);
       setValue("");
       return;
+    } else if (cmd === "cv" || cmd === "resume") {
+      appended.push({
+        id: id + 1,
+        text: "opening cv.pdf ...",
+        kind: "out",
+      });
+      nextId.current += 1;
+      window.open("/Pooja-Shah-Resume.pdf", "_blank", "noopener");
+    } else if (cmd === "email") {
+      let copied = false;
+      try {
+        await navigator.clipboard.writeText(EMAIL);
+        copied = true;
+      } catch {}
+      appended.push({
+        id: id + 1,
+        text: copied
+          ? `copied to clipboard: ${EMAIL}`
+          : `copy failed — here it is: ${EMAIL}`,
+        kind: "out",
+      });
+      nextId.current += 1;
+    } else if (cmd === "whoami") {
+      appended.push({
+        id: id + 1,
+        text: "guest",
+        kind: "out",
+      });
+      nextId.current += 1;
     } else if (NAV_COMMANDS[cmd]) {
       appended.push({
         id: id + 1,
