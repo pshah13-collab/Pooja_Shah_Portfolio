@@ -27,10 +27,7 @@ export default function Home() {
             -rw-r--r--
           </span>
           <span className="font-medium text-foreground transition-colors hover:text-accent-bright">
-            Pooja-Shah-Resume.pdf
-          </span>
-          <span className="text-foreground/50">
-            — my CV, Data Analyst
+            Pooja Shah Resume
           </span>
         </a>
       </div>
