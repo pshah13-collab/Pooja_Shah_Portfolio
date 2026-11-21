@@ -40,3 +40,6 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 data/submissions.json
+data/bookings.json
+data/availability.json
+data/logs.json

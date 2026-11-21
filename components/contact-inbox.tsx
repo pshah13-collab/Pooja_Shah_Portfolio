@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react";
 import type { Submission } from "@/lib/submissions";
+import { StatusBanner } from "@/components/status-banner";
 
 type Status = { type: "success" | "error"; text: string } | null;
 
@@ -99,17 +100,7 @@ export function ContactInbox({
 
   return (
     <div className="space-y-6">
-      {status && (
-        <p
-          className={`rounded-lg border px-3 py-2 text-sm ${
-            status.type === "success"
-              ? "border-accent/40 bg-accent/10 text-accent-bright"
-              : "border-highlight/40 bg-highlight/10 text-highlight"
-          }`}
-        >
-          {status.text}
-        </p>
-      )}
+      <StatusBanner status={status} />
       <p className="mb-3 text-sm">
         <span className="text-accent">pooja@scu:~$</span>{" "}
         <span className="text-foreground/60">mailq</span>

@@ -1,11 +1,9 @@
 "use client";
+import { inputClasses } from "@/lib/ui";
 
 import { useState } from "react";
 
 type Status = { type: "success" | "error"; text: string } | null;
-
-const inputClasses =
-  "w-full rounded-md border border-accent/25 bg-black/40 px-3 py-2 text-base text-foreground outline-none placeholder:text-foreground/30 focus:border-accent/60";
 
 export function ContactApiForm() {
   const [status, setStatus] = useState<Status>(null);

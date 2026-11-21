@@ -1,52 +1,36 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { downloadIcs } from "@/lib/calendar-ics";
+import { buildSlots, type Slot } from "@/lib/slots";
+import { loadOpenQuestionLines } from "@/lib/notepad";
+import { StatusBanner } from "@/components/status-banner";
+import type { BlockedDay } from "@/lib/availability";
 import type { Booking } from "@/lib/bookings";
+import { SlotList } from "@/components/slot-list";
+import { inputClasses } from "@/lib/ui";
 
 type Status = { type: "success" | "error"; text: string } | null;
 
-const inputClasses =
-  "w-full rounded-md border border-accent/25 bg-black/40 px-3 py-2 text-base text-foreground outline-none placeholder:text-foreground/30 focus:border-accent/60";
-
 const stepLabel = "text-xs tracking-widest text-accent uppercase";
 
-function buildSlots(taken: Set<string>): { iso: string; label: string }[] {
-  const slots: { iso: string; label: string }[] = [];
-  const day = new Date();
-  day.setHours(0, 0, 0, 0);
-  const times: [number, number][] = [
-    [12, 30],
-    [17, 30],
-  ];
-  while (slots.length < 10) {
-    day.setDate(day.getDate() + 1);
-    const weekday = day.getDay();
-    if (weekday === 0 || weekday === 6) continue;
-    for (const [h, m] of times) {
-      if (slots.length >= 10) break;
-      const slot = new Date(day);
-      slot.setHours(h, m, 0, 0);
-      if (slot.getTime() < Date.now() + 2 * 60 * 60 * 1000) continue;
-      const iso = slot.toISOString();
-      if (taken.has(iso)) continue;
-      slots.push({
-        iso,
-        label: slot.toLocaleString("en-US", {
-          weekday: "short",
-          month: "short",
-          day: "numeric",
-          hour: "numeric",
-          minute: "2-digit",
-          timeZoneName: "short",
-        }),
-      });
-    }
-  }
-  return slots;
-}
-
-export function MeetScheduler() {
-  const [slots, setSlots] = useState<{ iso: string; label: string }[]>([]);
+export function MeetScheduler({
+  initialBookings,
+  initialAvailability,
+}: {
+  initialBookings: Booking[];
+  initialAvailability: BlockedDay[];
+}) {
+  const [slots, setSlots] = useState<Slot[]>(() =>
+    buildSlots(
+      new Set(
+        initialBookings
+          .filter((b) => b.status !== "declined")
+          .map((b) => b.slot),
+      ),
+      new Set(initialAvailability.map((a) => a.date)),
+    ),
+  );
   const [selected, setSelected] = useState<string | null>(null);
   const [status, setStatus] = useState<Status>(null);
   const [confirmed, setConfirmed] = useState<Booking | null>(null);
@@ -55,6 +39,14 @@ export function MeetScheduler() {
   const [manageCode, setManageCode] = useState("");
   const [managed, setManaged] = useState<Booking | null>(null);
   const [rescheduling, setRescheduling] = useState(false);
+  const [notepadDraft, setNotepadDraft] = useState("");
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setNotepadDraft(loadOpenQuestionLines());
+    }, 0);
+    return () => clearTimeout(timer);
+  }, []);
 
   const loadActive = useCallback(async () => {
     try {
@@ -76,10 +68,22 @@ export function MeetScheduler() {
   const refresh = useCallback(async () => {
     const list = await loadActive();
     if (list) {
+      let blocked = new Set<string>();
+      try {
+        const response = await fetch("/api/availability");
+        const body = await response.json().catch(() => null);
+        if (response.ok && Array.isArray(body)) {
+          blocked = new Set(
+            body.map((b: { date: string }) => b.date),
+          );
+        }
+      } catch {
+        // if availability is unreachable, show slots with blocked days included
+      }
       const taken = new Set(
         list.filter((b) => b.status !== "declined").map((b) => b.slot),
       );
-      setSlots(buildSlots(taken));
+      setSlots(buildSlots(taken, blocked));
     }
   }, [loadActive]);
 
@@ -103,6 +107,7 @@ export function MeetScheduler() {
       email: String(data.get("email") ?? "").trim(),
       company: String(data.get("company") ?? "").trim(),
       topic: String(data.get("topic") ?? "").trim(),
+      questions: String(data.get("questions") ?? "").trim(),
       slot: selected,
     };
     if (!payload.name || !payload.email || !payload.topic) {
@@ -252,41 +257,19 @@ export function MeetScheduler() {
 
   return (
     <div className="space-y-8">
-      {status && (
-        <p
-          className={`rounded-lg border px-3 py-2 text-sm ${
-            status.type === "success"
-              ? "border-accent/40 bg-accent/10 text-accent-bright"
-              : "border-highlight/40 bg-highlight/10 text-highlight"
-          }`}
-        >
-          {status.text}
-        </p>
-      )}
+      <StatusBanner status={status} />
 
       <div>
         <p className={stepLabel}>step 1 · pick a time</p>
-        <div className="mt-3 grid gap-2 sm:grid-cols-2">
-          {slots.map((slot) => (
-            <button
-              key={slot.iso}
-              type="button"
-              onClick={() => {
-                setSelected(slot.iso);
-                setConfirmed(null);
-              }}
-              className={`rounded-md border px-3 py-2.5 text-left text-sm transition-colors ${
-                selected === slot.iso
-                  ? "border-accent bg-accent/15 text-accent-bright"
-                  : "border-accent/20 bg-black/30 text-foreground/75 hover:border-accent/50"
-              }`}
-            >
-              {slot.label}
-            </button>
-          ))}
-          {slots.length === 0 && (
-            <p className="text-sm text-foreground/50">loading open slots…</p>
-          )}
+        <div className="mt-3">
+          <SlotList
+            slots={slots}
+            selected={selected}
+            onSelect={(iso) => {
+              setSelected(iso);
+              setConfirmed(null);
+            }}
+          />
         </div>
       </div>
 
@@ -368,6 +351,20 @@ export function MeetScheduler() {
                   className={`${inputClasses} resize-y`}
                 />
               </div>
+              <div>
+                <label htmlFor="meet-questions" className="mb-1.5 block text-xs text-foreground/60">
+                  questions to bring <span className="text-foreground/40">(optional — prefilled from your notepad)</span>:
+                </label>
+                <textarea
+                  id="meet-questions"
+                  name="questions"
+                  maxLength={1000}
+                  rows={3}
+                  defaultValue={notepadDraft}
+                  placeholder="- ask about Tokenly"
+                  className={`${inputClasses} resize-y`}
+                />
+              </div>
               <button
                 type="submit"
                 disabled={busy}
@@ -398,6 +395,20 @@ export function MeetScheduler() {
           <p className="mt-1 font-mono text-2xl tracking-[0.3em] text-accent-bright">
             {confirmed.code}
           </p>
+          <button
+            type="button"
+            onClick={() =>
+              downloadIcs({
+                id: confirmed.id,
+                slot: confirmed.slot,
+                topic: confirmed.topic,
+                code: confirmed.code,
+              })
+            }
+            className="mt-3 rounded-md border border-accent/40 bg-accent/10 px-4 py-2 text-sm text-accent-bright transition-colors hover:bg-accent/20"
+          >
+            download calendar invite (.ics)
+          </button>
         </div>
       )}
 
@@ -455,20 +466,24 @@ export function MeetScheduler() {
                 >
                   [ cancel ]
                 </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    downloadIcs({
+                      id: managed.id,
+                      slot: managed.slot,
+                      topic: managed.topic,
+                      code: managed.code,
+                    })
+                  }
+                  className="text-accent-bright transition-colors hover:text-accent"
+                >
+                  [ .ics ]
+                </button>
               </div>
               {rescheduling && (
-                <div className="grid gap-2 pt-2 sm:grid-cols-2">
-                  {slots.map((slot) => (
-                    <button
-                      key={slot.iso}
-                      type="button"
-                      onClick={() => handleReschedule(slot.iso)}
-                      disabled={busy}
-                      className="rounded-md border border-accent/20 bg-black/30 px-3 py-2 text-left text-sm text-foreground/75 transition-colors hover:border-accent/50 disabled:opacity-50"
-                    >
-                      {slot.label}
-                    </button>
-                  ))}
+                <div className="pt-2">
+                  <SlotList slots={slots} onSelect={handleReschedule} />
                 </div>
               )}
             </div>

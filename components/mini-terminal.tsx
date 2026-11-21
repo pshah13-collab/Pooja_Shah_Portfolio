@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { buildSlots } from "@/lib/slots";
 
 type Line = { id: number; text: string; kind: "in" | "out" | "err" };
 
@@ -10,6 +11,7 @@ const NAV_COMMANDS: Record<string, string> = {
   projects: "/projects",
   blogs: "/blogs",
   contact: "/contact-me",
+  meet: "/meet",
 };
 
 const EMAIL = "poojadshah1999@gmail.com";
@@ -21,6 +23,8 @@ const HELP_LINES = [
   "  projects   go to /projects",
   "  blogs      go to /blogs",
   "  contact    go to /contact-me",
+  "  meet       go to /meet — book a coffee chat",
+  "  cal        list open coffee-chat slots",
   "  cv         open my resume",
   "  email      copy my email address",
   "  whoami     who are you?",
@@ -89,6 +93,67 @@ export function MiniTerminal() {
         kind: "out",
       });
       nextId.current += 1;
+    } else if (cmd === "cal" || cmd === "calendar") {
+      appended.push({
+        id: id + 1,
+        text: "checking calendar...",
+        kind: "out",
+      });
+      nextId.current += 1;
+      setLines((prev) => [...prev, ...appended]);
+      setValue("");
+
+      try {
+        const [bRes, aRes] = await Promise.all([
+          fetch("/api/bookings"),
+          fetch("/api/availability"),
+        ]);
+        const bookings = await bRes.json().catch(() => []);
+        const availability = await aRes.json().catch(() => []);
+        const taken = new Set(
+          (Array.isArray(bookings) ? bookings : [])
+            .filter((b: { status?: string }) => b.status !== "declined")
+            .map((b: { slot: string }) => b.slot),
+        );
+        const blocked = new Set(
+          (Array.isArray(availability) ? availability : []).map(
+            (a: { date: string }) => a.date,
+          ),
+        );
+        const openSlots = buildSlots(taken, blocked).slice(0, 4);
+        const results: Line[] = openSlots.length
+          ? [
+              ...openSlots.map((slot, i) => ({
+                id: id + 2 + i,
+                text: `  ${slot.label}`,
+                kind: "out" as const,
+              })),
+              {
+                id: id + 2 + openSlots.length,
+                text: 'type "meet" to book one of these.',
+                kind: "out" as const,
+              },
+            ]
+          : [
+              {
+                id: id + 2,
+                text: "no open slots right now — email me instead.",
+                kind: "out" as const,
+              },
+            ];
+        nextId.current += results.length;
+        setLines((prev) => [...prev, ...results]);
+      } catch {
+        setLines((prev) => [
+          ...prev,
+          {
+            id: id + 2,
+            text: "error: could not reach the calendar API.",
+            kind: "err",
+          },
+        ]);
+      }
+      return;
     } else if (NAV_COMMANDS[cmd]) {
       appended.push({
         id: id + 1,

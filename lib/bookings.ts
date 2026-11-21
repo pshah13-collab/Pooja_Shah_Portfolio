@@ -9,6 +9,7 @@ export type Booking = {
   email: string;
   company?: string;
   topic: string;
+  questions?: string;
   slot: string;
   code: string;
   status: BookingStatus;

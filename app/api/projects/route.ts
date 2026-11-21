@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { respond } from "@/lib/logger";
 import {
   appendProject,
   readProjects,
@@ -71,44 +72,46 @@ function cleanStringList(
   return { ok: true, items };
 }
 
-export async function GET() {
+export async function GET(request: Request) {
+  const startedAt = Date.now();
   const projects = await readProjects();
-  return NextResponse.json(projects);
+  return respond(request, NextResponse.json(projects), startedAt);
 }
 
 export async function POST(request: Request) {
+  const startedAt = Date.now();
   let body: unknown;
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json(
+    return respond(request, NextResponse.json(
       { error: "error: expected a JSON project object." },
       { status: 400 },
-    );
+    ), startedAt);
   }
 
   if (typeof body !== "object" || body === null) {
-    return NextResponse.json(
+    return respond(request, NextResponse.json(
       { error: "error: expected a JSON project object." },
       { status: 400 },
-    );
+    ), startedAt);
   }
 
   const fields = body as Record<string, unknown>;
 
   const title = cleanField(fields.title, "title", MAX_TITLE);
   if (!title.ok) {
-    return NextResponse.json({ error: title.error }, { status: 400 });
+    return respond(request, NextResponse.json({ error: title.error }, { status: 400 }), startedAt);
   }
 
   const tagline = cleanField(fields.tagline, "tagline", MAX_TAGLINE);
   if (!tagline.ok) {
-    return NextResponse.json({ error: tagline.error }, { status: 400 });
+    return respond(request, NextResponse.json({ error: tagline.error }, { status: 400 }), startedAt);
   }
 
   const date = cleanField(fields.date, "date", MAX_DATE);
   if (!date.ok) {
-    return NextResponse.json({ error: date.error }, { status: 400 });
+    return respond(request, NextResponse.json({ error: date.error }, { status: 400 }), startedAt);
   }
 
   const description = cleanField(
@@ -117,7 +120,7 @@ export async function POST(request: Request) {
     MAX_DESCRIPTION,
   );
   if (!description.ok) {
-    return NextResponse.json({ error: description.error }, { status: 400 });
+    return respond(request, NextResponse.json({ error: description.error }, { status: 400 }), startedAt);
   }
 
   const stack = cleanStringList(
@@ -127,7 +130,7 @@ export async function POST(request: Request) {
     MAX_STACK_ITEM,
   );
   if (!stack.ok) {
-    return NextResponse.json({ error: stack.error }, { status: 400 });
+    return respond(request, NextResponse.json({ error: stack.error }, { status: 400 }), startedAt);
   }
 
   const highlights = cleanStringList(
@@ -137,7 +140,7 @@ export async function POST(request: Request) {
     MAX_HIGHLIGHT,
   );
   if (!highlights.ok) {
-    return NextResponse.json({ error: highlights.error }, { status: 400 });
+    return respond(request, NextResponse.json({ error: highlights.error }, { status: 400 }), startedAt);
   }
 
   const newProject: Omit<Project, "slug"> & { slug?: string } = {
@@ -156,14 +159,14 @@ export async function POST(request: Request) {
   try {
     project = await appendProject(newProject);
   } catch {
-    return NextResponse.json(
+    return respond(request, NextResponse.json(
       {
         error:
           "error: storage is not writable on this deployment (serverless hosts have a read-only filesystem).",
       },
       { status: 500 },
-    );
+    ), startedAt);
   }
 
-  return NextResponse.json(project, { status: 201 });
+  return respond(request, NextResponse.json(project, { status: 201 }), startedAt);
 }

@@ -2,11 +2,10 @@
 
 import { useCallback, useState } from "react";
 import type { Project } from "@/lib/projects";
+import { inputClasses } from "@/lib/ui";
+import { StatusBanner } from "@/components/status-banner";
 
 type Status = { type: "success" | "error"; text: string } | null;
-
-const inputClasses =
-  "w-full rounded-md border border-accent/25 bg-black/40 px-3 py-2 text-base text-foreground outline-none placeholder:text-foreground/30 focus:border-accent/60";
 
 const emptyForm = {
   title: "",
@@ -173,17 +172,7 @@ export function ProjectManager({
             {editing ? `nano projects/${editing}.md` : "nano new-project.md"}
           </span>
         </p>
-        {status && (
-          <p
-            className={`rounded-lg border px-3 py-2 text-sm ${
-              status.type === "success"
-                ? "border-accent/40 bg-accent/10 text-accent-bright"
-                : "border-highlight/40 bg-highlight/10 text-highlight"
-            }`}
-          >
-            {status.text}
-          </p>
-        )}
+        <StatusBanner status={status} />
         <form
           onSubmit={handleSubmit}
           className="mt-3 space-y-4 rounded-lg border border-accent/20 bg-black/30 p-4 sm:p-5"

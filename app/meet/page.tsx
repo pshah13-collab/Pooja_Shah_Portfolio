@@ -1,11 +1,29 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Suspense } from "react";
 import { Cmd } from "@/components/cmd";
+import { MeetNotepad } from "@/components/meet-notepad";
 import { MeetScheduler } from "@/components/meet-scheduler";
+import { readAvailability } from "@/lib/availability";
+import { readBookings } from "@/lib/bookings";
 
 export const metadata: Metadata = {
   title: "Meet Pooja",
 };
+
+async function MeetSection() {
+  const [bookings, availability] = await Promise.all([
+    readBookings(),
+    readAvailability(),
+  ]);
+
+  return (
+    <MeetScheduler
+      initialBookings={bookings}
+      initialAvailability={availability}
+    />
+  );
+}
 
 export default function MeetPage() {
   return (
@@ -18,7 +36,18 @@ export default function MeetPage() {
       </p>
 
       <div className="mt-10">
-        <MeetScheduler />
+        <Suspense
+          fallback={<p className="text-sm text-foreground/50">loading…</p>}
+        >
+          <MeetSection />
+        </Suspense>
+      </div>
+
+      <div className="mt-10">
+        <p className="mb-3 text-xs tracking-widest text-accent uppercase">
+          bring your questions
+        </p>
+        <MeetNotepad />
       </div>
 
       <p className="mt-10 text-sm">
