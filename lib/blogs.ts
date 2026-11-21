@@ -38,3 +38,31 @@ export async function appendBlog(
 
   return post;
 }
+
+export async function updateBlog(
+  id: string,
+  patch: Partial<Omit<BlogPost, "id" | "createdAt">>,
+): Promise<BlogPost | undefined> {
+  const blogs = await readBlogs();
+  const index = blogs.findIndex((b) => b.id === id);
+  if (index === -1) return undefined;
+
+  const updated: BlogPost = { ...blogs[index], ...patch, id };
+  blogs[index] = updated;
+
+  await mkdir(dataDir, { recursive: true });
+  await writeFile(filePath, JSON.stringify(blogs, null, 2) + "\n", "utf8");
+
+  return updated;
+}
+
+export async function deleteBlog(id: string): Promise<boolean> {
+  const blogs = await readBlogs();
+  const remaining = blogs.filter((b) => b.id !== id);
+  if (remaining.length === blogs.length) return false;
+
+  await mkdir(dataDir, { recursive: true });
+  await writeFile(filePath, JSON.stringify(remaining, null, 2) + "\n", "utf8");
+
+  return true;
+}

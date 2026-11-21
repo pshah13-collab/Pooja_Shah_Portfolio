@@ -1,3 +1,6 @@
+import { mkdir, readFile, writeFile } from "node:fs/promises";
+import path from "node:path";
+
 export type Project = {
   slug: string;
   title: string;
@@ -8,51 +11,97 @@ export type Project = {
   highlights: string[];
 };
 
-export const projects: Project[] = [
-  {
-    slug: "analytics-showdown",
-    title: "Analytics Showdown",
-    tagline: "Good Nature Agro Case Challenge",
-    date: "May 2026",
-    stack: ["Python", "LLM / AI Agent Development", "Tableau"],
-    description:
-      "A stakeholder-facing analytics consulting challenge for a social enterprise supporting African smallholder farmers, delivered as a case competition entry.",
-    highlights: [
-      "Applied exploratory analysis, segmentation, and KPI evaluation to understand farmer segments and performance drivers",
-      "Built an AI-agent-assisted workflow in Python to accelerate the analysis, paired with Tableau dashboards for storytelling",
-      "Delivered data-backed strategic recommendations aimed at a non-technical stakeholder audience",
-    ],
-  },
-  {
-    slug: "tokenly",
-    title: "Tokenly",
-    tagline: "LLM Cost Optimization Tool",
-    date: "Apr 2026",
-    stack: ["PostgreSQL", "Snowflake", "Next.js", "FastAPI", "Docker"],
-    description:
-      "An LLM cost-analytics dashboard that analyzes per-request token use, latency, and cost to help product teams understand and optimize model spend.",
-    highlights: [
-      "Tracks token usage, latency, and cost at the per-request level and rolls it up into team-facing views",
-      "PostgreSQL and Snowflake for storage and analytics, with a FastAPI backend and a Next.js frontend, shipped in Docker",
-      "Surfaces where model spend concentrates so product teams can tune prompts, models, and workloads",
-    ],
-  },
-  {
-    slug: "bronco-health",
-    title: "Bronco Health",
-    tagline: "AI Stress Prediction Platform",
-    date: "Jan 2026",
-    stack: ["Python", "Machine Learning", "GenAI", "React.js"],
-    description:
-      "An AI platform that predicts student stress risk and turns it into actionable wellness insights through a self-service dashboard.",
-    highlights: [
-      "Led the full machine learning product lifecycle, from analytics workflow design to shipped product",
-      "Trained classification models to predict student stress risk from behavioral and wellness data",
-      "Built a React.js dashboard with wellness trends and personalized recommendations for students",
-    ],
-  },
-];
+const dataDir = path.join(process.cwd(), "data");
+const filePath = path.join(dataDir, "projects.json");
 
-export function getProject(slug: string): Project | undefined {
-  return projects.find((p) => p.slug === slug);
+export async function readProjects(): Promise<Project[]> {
+  try {
+    const raw = await readFile(filePath, "utf8");
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+export async function getProject(slug: string): Promise<Project | undefined> {
+  return (await readProjects()).find((p) => p.slug === slug);
+}
+
+function slugify(text: string): string {
+  return (
+    text
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "") || "project"
+  );
+}
+
+export async function appendProject(
+  input: Omit<Project, "slug"> & { slug?: string },
+): Promise<Project> {
+  const projects = await readProjects();
+
+  const base = slugify(input.slug?.trim() || input.title);
+  let slug = base;
+  let n = 2;
+  while (projects.some((p) => p.slug === slug)) {
+    slug = `${base}-${n}`;
+    n += 1;
+  }
+
+  const project: Project = {
+    slug,
+    title: input.title,
+    tagline: input.tagline,
+    date: input.date,
+    stack: input.stack,
+    description: input.description,
+    highlights: input.highlights,
+  };
+
+  await mkdir(dataDir, { recursive: true });
+  await writeFile(
+    filePath,
+    JSON.stringify([...projects, project], null, 2) + "\n",
+    "utf8",
+  );
+
+  return project;
+}
+
+export async function updateProject(
+  slug: string,
+  patch: Partial<Omit<Project, "slug">>,
+): Promise<Project | undefined> {
+  const projects = await readProjects();
+  const index = projects.findIndex((p) => p.slug === slug);
+  if (index === -1) return undefined;
+
+  const updated: Project = { ...projects[index], ...patch, slug };
+  projects[index] = updated;
+
+  await mkdir(dataDir, { recursive: true });
+  await writeFile(
+    filePath,
+    JSON.stringify(projects, null, 2) + "\n",
+    "utf8",
+  );
+
+  return updated;
+}
+
+export async function deleteProject(slug: string): Promise<boolean> {
+  const projects = await readProjects();
+  const remaining = projects.filter((p) => p.slug !== slug);
+  if (remaining.length === projects.length) return false;
+
+  await mkdir(dataDir, { recursive: true });
+  await writeFile(
+    filePath,
+    JSON.stringify(remaining, null, 2) + "\n",
+    "utf8",
+  );
+
+  return true;
 }

@@ -1,32 +1,24 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import { Cmd } from "@/components/cmd";
-import { getProject, projects } from "@/lib/projects";
+import { getProject } from "@/lib/projects";
+
+export const metadata: Metadata = {
+  title: "Project",
+};
 
 export const instant = false;
 
-export function generateStaticParams() {
-  return projects.map((project) => ({ slug: project.slug }));
-}
+type ProjectPageProps = PageProps<"/projects/[slug]">;
 
-export async function generateMetadata({
-  params,
-}: PageProps<"/projects/[slug]">): Promise<Metadata> {
-  const { slug } = await params;
-  const project = getProject(slug);
-  return { title: project ? project.title : "Project Not Found" };
-}
-
-export default async function ProjectPage({
-  params,
-}: PageProps<"/projects/[slug]">) {
-  const { slug } = await params;
-  const project = getProject(slug);
+async function ProjectView({ slug }: { slug: string }) {
+  const project = await getProject(slug);
   if (!project) notFound();
 
   return (
-    <section className="mx-auto w-full max-w-2xl px-4 py-10 sm:px-6 sm:py-16">
+    <>
       <Cmd>{`cat projects/${project.slug}.md`}</Cmd>
 
       <h1 className="text-xl sm:text-2xl">{project.title}</h1>
@@ -78,6 +70,20 @@ export default async function ProjectPage({
           <span className="text-accent">pooja@scu:~$</span> cd ..
         </Link>
       </p>
+    </>
+  );
+}
+
+export default async function ProjectPage({ params }: ProjectPageProps) {
+  const { slug } = await params;
+
+  return (
+    <section className="mx-auto w-full max-w-2xl px-4 py-10 sm:px-6 sm:py-16">
+      <Suspense
+        fallback={<p className="text-sm text-foreground/50">loading…</p>}
+      >
+        <ProjectView slug={slug} />
+      </Suspense>
     </section>
   );
 }

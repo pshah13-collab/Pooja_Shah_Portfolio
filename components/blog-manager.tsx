@@ -12,6 +12,9 @@ export function BlogManager({ initialPosts }: { initialPosts: BlogPost[] }) {
   const [posts, setPosts] = useState<BlogPost[]>(initialPosts);
   const [status, setStatus] = useState<Status>(null);
   const [publishing, setPublishing] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [title, setTitle] = useState("");
+  const [body, setBody] = useState("");
 
   const loadPosts = useCallback(async () => {
     try {
@@ -33,13 +36,25 @@ export function BlogManager({ initialPosts }: { initialPosts: BlogPost[] }) {
     }
   }, []);
 
+  function startEdit(post: BlogPost) {
+    setEditingId(post.id);
+    setTitle(post.title);
+    setBody(post.body);
+    setStatus(null);
+  }
+
+  function cancelEdit() {
+    setEditingId(null);
+    setTitle("");
+    setBody("");
+  }
+
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const form = event.currentTarget;
-    const data = new FormData(form);
+
     const payload = {
-      title: String(data.get("title") ?? "").trim(),
-      body: String(data.get("body") ?? "").trim(),
+      title: title.trim(),
+      body: body.trim(),
     };
 
     if (!payload.title || !payload.body) {
@@ -51,24 +66,63 @@ export function BlogManager({ initialPosts }: { initialPosts: BlogPost[] }) {
     setStatus(null);
 
     try {
-      const response = await fetch("/api/blogs", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      const response = await fetch(
+        editingId
+          ? `/api/blogs/${encodeURIComponent(editingId)}`
+          : "/api/blogs",
+        {
+          method: editingId ? "PUT" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        },
+      );
       const body = await response.json().catch(() => null);
 
       if (response.ok) {
         setStatus({
           type: "success",
-          text: `✔ post published to /api/blogs — saved with id ${body?.id ?? "(unknown)"}.`,
+          text: editingId
+            ? "✔ post updated."
+            : `✔ post published to /api/blogs — saved with id ${body?.id ?? "(unknown)"}.`,
         });
-        form.reset();
+        cancelEdit();
         await loadPosts();
       } else {
         setStatus({
           type: "error",
           text: body?.error ?? `error: request failed with status ${response.status}.`,
+        });
+      }
+    } catch {
+      setStatus({
+        type: "error",
+        text: "error: could not reach /api/blogs. is the server running?",
+      });
+    } finally {
+      setPublishing(false);
+    }
+  }
+
+  async function handleDelete(id: string) {
+    if (!window.confirm(`rm blog ${id}? this cannot be undone.`)) return;
+
+    setPublishing(true);
+    setStatus(null);
+    try {
+      const response = await fetch(`/api/blogs/${encodeURIComponent(id)}`, {
+        method: "DELETE",
+      });
+      if (response.ok) {
+        setStatus({ type: "success", text: "✔ post removed." });
+        if (editingId === id) cancelEdit();
+        await loadPosts();
+      } else {
+        const body = await response.json().catch(() => null);
+        setStatus({
+          type: "error",
+          text:
+            body?.error ??
+            `error: request failed with status ${response.status}.`,
         });
       }
     } catch {
@@ -90,7 +144,9 @@ export function BlogManager({ initialPosts }: { initialPosts: BlogPost[] }) {
       <div>
         <p className="mb-3 text-sm">
           <span className="text-accent">pooja@scu:~$</span>{" "}
-          <span className="text-foreground/60">nano new-post.md</span>
+          <span className="text-foreground/60">
+            {editingId ? `nano blogs/${editingId}.md` : "nano new-post.md"}
+          </span>
         </p>
         {status && (
           <p
@@ -119,6 +175,8 @@ export function BlogManager({ initialPosts }: { initialPosts: BlogPost[] }) {
               required
               maxLength={150}
               placeholder="Post title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
               className={inputClasses}
             />
           </div>
@@ -133,19 +191,38 @@ export function BlogManager({ initialPosts }: { initialPosts: BlogPost[] }) {
               maxLength={10000}
               rows={8}
               placeholder="Write your blog post..."
+              value={body}
+              onChange={(e) => setBody(e.target.value)}
               className={`${inputClasses} resize-y font-mono`}
             />
           </div>
-          <button
-            type="submit"
-            disabled={publishing}
-            className="rounded-md border border-accent/40 bg-accent/10 px-4 py-2 text-sm text-accent-bright transition-colors hover:bg-accent/20 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <span className="text-accent" aria-hidden>
-              $
-            </span>{" "}
-            {publishing ? "publishing…" : "publish post"}
-          </button>
+          <div className="flex gap-3">
+            <button
+              type="submit"
+              disabled={publishing}
+              className="rounded-md border border-accent/40 bg-accent/10 px-4 py-2 text-sm text-accent-bright transition-colors hover:bg-accent/20 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <span className="text-accent" aria-hidden>
+                $
+              </span>{" "}
+              {editingId
+                ? publishing
+                  ? "saving…"
+                  : "save changes"
+                : publishing
+                  ? "publishing…"
+                  : "publish post"}
+            </button>
+            {editingId && (
+              <button
+                type="button"
+                onClick={cancelEdit}
+                className="rounded-md border border-accent/20 px-4 py-2 text-sm text-foreground/60 transition-colors hover:text-foreground"
+              >
+                cancel
+              </button>
+            )}
+          </div>
         </form>
       </div>
 
@@ -174,6 +251,24 @@ export function BlogManager({ initialPosts }: { initialPosts: BlogPost[] }) {
                     {post.body}
                   </p>
                   <p className="mt-0.5 text-xs text-foreground/35">id: {post.id}</p>
+                  <div className="mt-2 flex gap-3 text-xs">
+                    <button
+                      type="button"
+                      onClick={() => startEdit(post)}
+                      disabled={publishing}
+                      className="text-accent-bright transition-colors hover:text-accent disabled:opacity-50"
+                    >
+                      [ edit ]
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(post.id)}
+                      disabled={publishing}
+                      className="text-highlight transition-colors hover:opacity-80 disabled:opacity-50"
+                    >
+                      [ rm ]
+                    </button>
+                  </div>
                 </li>
               ))}
             </ul>

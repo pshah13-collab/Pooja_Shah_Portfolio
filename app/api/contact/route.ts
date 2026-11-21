@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { appendSubmission } from "@/lib/submissions";
+import { appendSubmission, readSubmissions } from "@/lib/submissions";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -93,4 +93,9 @@ export async function POST(request: Request) {
   }
 
   return NextResponse.json(submission, { status: 201 });
+}
+
+export async function GET() {
+  const submissions = await readSubmissions();
+  return NextResponse.json(submissions);
 }
