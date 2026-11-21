@@ -10,24 +10,27 @@ export function MeetNotepad() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editText, setEditText] = useState("");
   const [warning, setWarning] = useState<string | null>(null);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      const { questions: loaded, corrupt } = loadQuestions();
-      setQuestions(loaded);
+      const { questions: loadedQuestions, corrupt } = loadQuestions();
+      setQuestions(loadedQuestions);
+      setLoaded(true);
       if (corrupt) {
         setWarning(
           "⚠ your saved notes were unreadable, so the notepad started fresh.",
         );
-        saveQuestions(loaded);
+        saveQuestions(loadedQuestions);
       }
     }, 0);
     return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {
+    if (!loaded) return;
     saveQuestions(questions);
-  }, [questions]);
+  }, [questions, loaded]);
 
   function addQuestion(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
