@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { respond } from "@/lib/logger";
 import { readAvailability, updateBlockedDay } from "@/lib/availability";
 
 type Params = { params: Promise<{ date: string }> };
@@ -14,11 +15,16 @@ function isValidDate(value: string): boolean {
 
 export async function PUT(request: Request, { params }: Params) {
   const { date } = await params;
+  const startedAt = Date.now();
 
   if (!isValidDate(date)) {
-    return NextResponse.json(
-      { error: "error: date must be a valid YYYY-MM-DD day." },
-      { status: 400 },
+    return respond(
+      request,
+      NextResponse.json(
+        { error: "error: date must be a valid YYYY-MM-DD day." },
+        { status: 400 },
+      ),
+      startedAt,
     );
   }
 
@@ -26,16 +32,24 @@ export async function PUT(request: Request, { params }: Params) {
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json(
-      { error: "error: expected a JSON object with fields to update." },
-      { status: 400 },
+    return respond(
+      request,
+      NextResponse.json(
+        { error: "error: expected a JSON object with fields to update." },
+        { status: 400 },
+      ),
+      startedAt,
     );
   }
 
   if (typeof body !== "object" || body === null) {
-    return NextResponse.json(
-      { error: "error: expected a JSON object with fields to update." },
-      { status: 400 },
+    return respond(
+      request,
+      NextResponse.json(
+        { error: "error: expected a JSON object with fields to update." },
+        { status: 400 },
+      ),
+      startedAt,
     );
   }
 
@@ -45,17 +59,25 @@ export async function PUT(request: Request, { params }: Params) {
   if (fields.date !== undefined) {
     const newDate = typeof fields.date === "string" ? fields.date.trim() : "";
     if (!isValidDate(newDate)) {
-      return NextResponse.json(
-        { error: "error: date must be a valid YYYY-MM-DD day." },
-        { status: 400 },
+      return respond(
+        request,
+        NextResponse.json(
+          { error: "error: date must be a valid YYYY-MM-DD day." },
+          { status: 400 },
+        ),
+        startedAt,
       );
     }
     if (newDate !== date) {
       const availability = await readAvailability();
       if (availability.some((b) => b.date === newDate)) {
-        return NextResponse.json(
-          { error: `error: ${newDate} is already blocked.` },
-          { status: 409 },
+        return respond(
+          request,
+          NextResponse.json(
+            { error: `error: ${newDate} is already blocked.` },
+            { status: 409 },
+          ),
+          startedAt,
         );
       }
     }
@@ -67,43 +89,63 @@ export async function PUT(request: Request, { params }: Params) {
       patch.note = null;
     } else if (typeof fields.note === "string") {
       if (fields.note.trim().length > MAX_NOTE) {
-        return NextResponse.json(
-          { error: `error: note must be at most ${MAX_NOTE} characters.` },
-          { status: 400 },
+        return respond(
+          request,
+          NextResponse.json(
+            { error: `error: note must be at most ${MAX_NOTE} characters.` },
+            { status: 400 },
+          ),
+          startedAt,
         );
       }
       patch.note = fields.note;
     } else {
-      return NextResponse.json(
-        { error: "error: note must be text." },
-        { status: 400 },
+      return respond(
+        request,
+        NextResponse.json(
+          { error: "error: note must be text." },
+          { status: 400 },
+        ),
+        startedAt,
       );
     }
   }
 
   if (Object.keys(patch).length === 0) {
-    return NextResponse.json(
-      { error: "error: nothing to update." },
-      { status: 400 },
+    return respond(
+      request,
+      NextResponse.json(
+        { error: "error: nothing to update." },
+        { status: 400 },
+      ),
+      startedAt,
     );
   }
 
   try {
     const updated = await updateBlockedDay(date, patch);
     if (!updated) {
-      return NextResponse.json(
-        { error: `error: ${date} is not blocked.` },
-        { status: 404 },
+      return respond(
+        request,
+        NextResponse.json(
+          { error: `error: ${date} is not blocked.` },
+          { status: 404 },
+        ),
+        startedAt,
       );
     }
-    return NextResponse.json(updated);
+    return respond(request, NextResponse.json(updated), startedAt);
   } catch {
-    return NextResponse.json(
-      {
-        error:
-          "error: storage is not writable on this deployment (serverless hosts have a read-only filesystem).",
-      },
-      { status: 500 },
+    return respond(
+      request,
+      NextResponse.json(
+        {
+          error:
+            "error: storage is not writable on this deployment (serverless hosts have a read-only filesystem).",
+        },
+        { status: 500 },
+      ),
+      startedAt,
     );
   }
 }
